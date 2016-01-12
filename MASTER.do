@@ -52,6 +52,7 @@ run "${Codes}/createVariables.do"
 run "${Codes}/histograms.do"
 run "${Codes}/maps.do"
 run "${Codes}/bunching.do"
+run "${Codes}/hhComposition.do"
 
 *** ESTIMATING ELASTICITIES ***
 

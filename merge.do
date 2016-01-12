@@ -27,15 +27,31 @@ save ${TreatedData}/raisCadRs_hh.dta, replace
 *Random Sample for Cadunico Pessoa e Domicilio
 use ${TreatedData}/cadUnicoDomRs_idHh.dta, clear
 merge 1:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(hhSizePes below6 below15 teens adults dateUpdatePes incomePes codmun) update
+replace period = "04/01/11 to 06/02/11" if dateUpdate>date("01Apr2011","DMY") & dateUpdate<date("2Jun2011","DMY")
+replace period = "06/02/11 to 06/18/12" if dateUpdate>date("2Jun2011","DMY") & dateUpdate<date("18Jun2012","DMY")
+replace period = "06/18/12 to 11/30/12" if dateUpdate>date("18Jun2012","DMY") & dateUpdate<date("30Nov2012","DMY") /*Only one in which below6 matters*/
+replace period = "11/30/12 to 02/19/13" if dateUpdate>date("30Nov2012","DMY") & dateUpdate<date("19Feb2013","DMY")
+replace period = "02/19/13 to 06/01/14" if dateUpdate>date("19Feb2013","DMY") & dateUpdate<date("1Jun2014","DMY")
+replace period = "06/01/14 to 04/18/15" if dateUpdate>date("1Jun2014","DMY") & dateUpdate<date("18Apr2015","DMY")
+gen dependents = below15
+replace dependents = 5 if below15 > = 5
+tostring dependents, replace
+replace depedents = "5+" if dependents == "5"
+gen teen = teens
+replace teen = 2 if teens >= 2
+tostring teen, replace
+replace teen = "2+" if teen == "2"
 save ${TreatedData}/cadDomPesRs_idHh.dta, replace
 
+capture log close 
+
+/*
 *Samples for bunching estimates
 use ${TreatedData}/cadDomPesRs_idHh.dta, clear
-keep if date == & hhSize == & child == & 
-bysort incomeDomPc: gen c = _N
-bysort incomeDomPc: gen aux = _n
+bysort incomeDomPc period dependents teen: gen c = _N
+bysort incomeDomPc period dependents teen: gen aux = _n
 keep if c == aux & incomeDomPc <1000
-keep incomeDomPc c
+keep incomeDomPc c period dependents teen
 sort incomeDomPc
 gen aux = 100*(income[_n+1]-income)
 replace aux = 1 if aux == .
@@ -50,67 +66,10 @@ gen r10 = (mod(ybar,10) == 0)
 gen r25 = (mod(ybar,25) == 0)
 gen r50 = (mod(ybar,50) == 0)
 gen r100 = (mod(ybar,100) == 0)
+save ${TreatedData}/cadUnicoDomRs_07302009_bin.dta, replace
 
-save ${TreatedData}/cadUnicoDomRs_bin.dta, replace
+
 capture log close 
 
-*Not using from here on yet..
-/*
-*For checks across cadunico and folha (incomplete)
-use ${TreatedData}/folhaIncomeRs_hhMonth.dta, clear
-bysort idHh: gen aux = _n
-bysort idHh: gen update = (incomeFolha == incomeFolha[_n-1])
-keep if aux == 1 | update == 0
-drop aux update
-sort idHh dateFolha
-bysort idHh: egen dateUpdateFolha = max(dateFolha)
-merge m:1 idHh using ${TreatedData}/cadUnicoDomRs_idHh.dta, keepusing(dateUpdateDom incomeDomPc hhSizeDom)
-drop _m
-merge m:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(dateUpdatePes incomePes hhSizePes)
-drop _m
-rename dateFolha date
-format date %td
-merge 1:1 idHh date using ${TreatedData}/raisRs_hhMonth.dta
-unique idHh if _m == 3
-unique idHh 
-/*Note that 316,627 out of the 859,636 of the households (36.8%) are in both datasets*/
-drop if _m == 2
-drop _m
-save ${TreatedData}/folhaIncomeRaisCompressRs_hhMonth.dta, replace
-rename incomeFolha incomeAvg
-collapse incomeAvg, by(idHh)
-sort idHh
-merge 1:1 idHh using ${TreatedData}/cadUnicoDomRs_idHh.dta /*21,798 out of 859,636(2.54%) of the Folha obs are not in CadunicoDom*/
-/*No obs just in cadUnicoDom because cadUnicoDom is a subset folha*/
-gen cadDomEx = (_m>1)
-drop _m
-merge 1:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta /* 14 out of 2,856,030 (0%) of the Folha with CadUnicoDom obs are not in Cadunico*/
-/*No obs just in cadUnicoPes because cadUnicoPes is a subset folha*/
-gen cadIndEx = (_m>1)
-drop _m
-isid idHh
-sort idHh
-save ${TreatedData}/intrinsicOccupationRs_idHh.dta, replace
-
-*Random Sample for regressions
-
-use ${TreatedData}/folhaIncomeRs_hhMonth.dta, clear
-merge m:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(hhSizePes dateUpdatePes)
-rename _merge mFolhahhSizePes
-expand hhSizePes
-bysort idHh year month: gen aux = _n
-sort idHh aux 
-merge m:1 idHh aux using ${TreatedData}/cadUnicoPesRs_idInd.dta, keepusing(idInd dateBirth)
-rename _m mfolhaCadPes
-merge m:1 idHh using ${TreatedData}/cadUnicoDomRs_idHh.dta, keepusing(hhSizeDom dateUpdateDom)
-rename _m mCadDom
-sort idHh year month aux
-save ${TreatedData}/regressionsRs.dta, replace
-drop if year == .
-gen hhSize = hhSizeDom
-replace hhSize = hhSizePes if hhSize == . | hhSize == 0
-isid idHh year month aux
-sort idHh year month aux
-save ${TreatedData}/regressionsRs_AuxIndMonth.dta, replace
 
 
