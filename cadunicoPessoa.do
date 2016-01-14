@@ -86,6 +86,7 @@ bysort idHh: gen aux = _n
 bysort idHh: gen hhSizePes = _N
 isid idInd
 sort idInd
+format date* %tdCCYY.NN.DD
 save ${TreatedData}/cadUnicoPesRs_idInd.dta, replace
 
 **Defining heads of the households by age during update
@@ -128,6 +129,7 @@ replace educPartner = 0 if educPartner == .
 gen educPartner2 = educPartner^2
 gen ageHead2 = ageHead^2
 keep if dateUpdatePes > date("01/30/2009","MDY") & dateUpdatePes<date("04/01/2015","MDY")
+format date* %tdCCYY.NN.DD
 sort idHh
 isid idHh
 

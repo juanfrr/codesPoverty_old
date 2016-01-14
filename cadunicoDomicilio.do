@@ -35,6 +35,7 @@ rename qtd_familias_domic_fam numFamilies
 gen numRoomsEx = (numRooms !=.)
 replace numRooms = 0 if numRooms == .
 keep if dateUpdateDom > date("01/30/2009","MDY") & dateUpdateDom<date("04/01/2015","MDY")
+format date* %tdCCYY.NN.DD
 
 isid idHh
 sort idHh

@@ -27,20 +27,17 @@ save ${TreatedData}/raisCadRs_hh.dta, replace
 *Random Sample for Cadunico Pessoa e Domicilio
 use ${TreatedData}/cadUnicoDomRs_idHh.dta, clear
 merge 1:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(hhSizePes below6 below15 teens adults dateUpdatePes incomePes codmun) update
-replace period = "04/01/11 to 06/02/11" if dateUpdate>date("01Apr2011","DMY") & dateUpdate<date("2Jun2011","DMY")
-replace period = "06/02/11 to 06/18/12" if dateUpdate>date("2Jun2011","DMY") & dateUpdate<date("18Jun2012","DMY")
-replace period = "06/18/12 to 11/30/12" if dateUpdate>date("18Jun2012","DMY") & dateUpdate<date("30Nov2012","DMY") /*Only one in which below6 matters*/
-replace period = "11/30/12 to 02/19/13" if dateUpdate>date("30Nov2012","DMY") & dateUpdate<date("19Feb2013","DMY")
-replace period = "02/19/13 to 06/01/14" if dateUpdate>date("19Feb2013","DMY") & dateUpdate<date("1Jun2014","DMY")
-replace period = "06/01/14 to 04/18/15" if dateUpdate>date("1Jun2014","DMY") & dateUpdate<date("18Apr2015","DMY")
-gen dependents = below15
-replace dependents = 5 if below15 > = 5
-tostring dependents, replace
-replace depedents = "5+" if dependents == "5"
-gen teen = teens
-replace teen = 2 if teens >= 2
-tostring teen, replace
-replace teen = "2+" if teen == "2"
+gen dateUpdate = dateUpdateDom
+replace dateUpdate = dateUpdatePes if dateUpdateDom == .
+gen period = "07/30/09 to 04/01/11" if dateUpdate>=date("30Jul2009","DMY") & dateUpdate<date("01Apr2011","DMY")
+replace period = "04/01/11 to 06/02/11" if dateUpdate>=date("01Apr2011","DMY") & dateUpdate<date("2Jun2011","DMY")
+replace period = "06/02/11 to 06/18/12" if dateUpdate>=date("2Jun2011","DMY") & dateUpdate<date("18Jun2012","DMY")
+replace period = "06/18/12 to 11/30/12" if dateUpdate>=date("18Jun2012","DMY") & dateUpdate<date("30Nov2012","DMY") /*Only one in which below6 matters*/
+replace period = "11/30/12 to 02/19/13" if dateUpdate>=date("30Nov2012","DMY") & dateUpdate<date("19Feb2013","DMY")
+replace period = "02/19/13 to 06/01/14" if dateUpdate>=date("19Feb2013","DMY") & dateUpdate<date("1Jun2014","DMY")
+replace period = "06/01/14 to 04/18/15" if dateUpdate>=date("1Jun2014","DMY") & dateUpdate<date("18Apr2015","DMY")
+format date* %tdCCYY.NN.DD
+
 save ${TreatedData}/cadDomPesRs_idHh.dta, replace
 
 capture log close 
