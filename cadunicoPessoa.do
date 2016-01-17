@@ -82,7 +82,7 @@ rename val_remuner_emprego_memb incomeLast
 label var incomeLast "Income in the last month"
 rename val_renda_bruta_12_meses_memb incomeYear
 label var incomeYear "Income in the last 12 months"
-bysort idHh: gen aux = _n
+gen age = floor((date(dta_atual_memb,"YMD")-date(dta_nasc_pessoa,"YMD"))/365)
 bysort idHh: gen hhSizePes = _N
 isid idInd
 sort idInd
@@ -90,13 +90,11 @@ format date* %tdCCYY.NN.DD
 save ${TreatedData}/cadUnicoPesRs_idInd.dta, replace
 
 **Defining heads of the households by age during update
-gen ageUpdate = floor((date(dta_atual_memb,"YMD")-date(dta_nasc_pessoa,"YMD"))/365)
 gen numAdults = (age>17 & age<66)
 gen below6 = (age <=6 & age >=0)
 gen below15 = (age <= 15 & age >= 0)
 gen teens = (age <= 18 & age > 15)
 gen adults = (age > 18)
-
 *Ordering people by: 65->16 then 66->814 then 15->0
 gen mAge = age
 replace mAge = -age if age >=16 & age <=65
@@ -111,7 +109,7 @@ replace educHead = schooling if member == 1
 gen genderHead = .
 replace genderHead = gender if member == 1
 gen ageHead = .
-replace ageHead = ageUpdate if member == 1
+replace ageHead = age if member == 1
 gen partner = 0
 replace partner = (relative == 2)
 gen educPartner = .

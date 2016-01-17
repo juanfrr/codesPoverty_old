@@ -14,7 +14,7 @@ global Poverty "${root}/Copy/Projects/Poverty"
 global Text "${Poverty}/textPoverty"
 global Presentation "${Poverty}/Presentation/today"
 global Codes "${Poverty}/codesPoverty"
-global Logs "${Poverty}/Codes/Logs"
+global Logs "${Poverty}/Logs"
 global Graphs "${Poverty}/Graphs"
 global Tables "${Poverty}/Tables"
 
@@ -51,8 +51,13 @@ run "${Codes}/createVariables.do"
   
 run "${Codes}/histograms.do"
 run "${Codes}/maps.do"
-run "${Codes}/bunching.do"
 run "${Codes}/hhComposition.do"
 
 *** ESTIMATING ELASTICITIES ***
 
+run "${Codes}/bunching.do"
+
+*** CHECKS ***
+
+run "${Codes}/dates.do"
+run "${Codes}/benefits.do"

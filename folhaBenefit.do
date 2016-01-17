@@ -12,7 +12,7 @@ rename id sequencialNumber
 rename prog program
 label var prog "BF = 0694"
 rename uf state
-gen date = date(rf_folha,"MY")
+gen dateFolha = date(rf_folha,"MY")
 rename cd_agencia bankBranch
 rename nm_agencia bankBranchName
 rename nm_responsavel nameHeadHh
@@ -39,8 +39,8 @@ rename sitfam statusHhD
 gen datePregnant = date(vigbvg,"DMY") 
 gen dateNursingMother = date(vigbvn,"DMY")
 gen date0to15 = date(vigvar,"DMY")
-rename vigbvj dateYoung /*gen dateYoung = date(vigbvj,"DMY")*/
-rename vigextra dateExtraordinary /*gen dateExtraordinary = date(vigextra,"DMY")*/
+gen dateYoung = date(vigbvj,"DMY")
+gen dateExtraordinary = date(vigextra,"DMY")
 rename cep zipcode
 rename nisdependente idInd 
 gen dateBirth = date(dtnascdep,"DMY")
@@ -59,23 +59,22 @@ rename sexotit headSex
 rename sexodep sex
 rename inep schoolCode
 rename ibgeesc schoolCodmun
-rename dt_validade_beneficio dateLastUpdate/*gen dateLastUpdate = date(dt_validade_beneficio,"DMY")*/
-gen year = year(date)
-gen month = month(date)
-*CHECK WITH FOLHA (OLD) 2012
-*CHECK WITH FOLHA 2012
-*CHECK WITH FOLHA 2012
-*CHECK WITH FOLHA 2012
-/*foreach name in Payment InitialPayment LastUpdate Pregnant NursingMother 0to15 Young Extraordinary{
+gen dateLastUpdate = date(dt_validade_beneficio,"DMY")
+gen year = year(dateFolha)
+gen month = month(dateFolha)
+foreach name in Payment InitialPayment LastUpdate Pregnant NursingMother 0to15 Young Extraordinary{
 	gen year`name' = year(date`name')
 	gen month`name' = month(date`name')
-}*/
+}
 keep idInd idHh date* year* month* benefit* status* eligible* hhWith*
 order idInd idHh year month  
-bysort idInd date datePayment: gen dup = _N
+bysort idInd dateFolha datePayment: gen dup = _N
 drop if dup > 1 /*92 observations deleted*/
 drop dup 
 drop if idInd == . | year == . | month == . | yearPayment == . | monthPayment == . /*1 observation deleted*/
+
+format date* %tdCCYY.NN.DD
+
 isid idInd year month yearPayment monthPayment
 sort idInd year month yearPayment monthPayment
 save ${TreatedData}/FolhaBenefitsRs_idIndMonth.dta, replace

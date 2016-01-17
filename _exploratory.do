@@ -1,4 +1,17 @@
-use ${TreatedData}/cadDomPesRs_idHh.dta, clear
+use ${TreatedData}/cadFolRs_idIndMon.dta, clear
+keep if _merge == 3
+sort idHh dateFolha datePayment
+browse idHh idInd dateFolha datePayment ben* if benDifHh >= 1 & benDifHh < .
+
+use ${TreatedData}/FolhaBenefitsRs_idIndMonth.dta, clear
+tab benDifInd
+tab benDifHh, m
+sort idHh dateFolha datePayment
+browse idHh idInd dateFolha datePayment ben* 
+/*erase ${TreatedData}/cadFolBenRs_idHhMon.dta
+use ${TreatedData}/FolhaBenefitsRs_idIndMonth.dta, clear
+
+/*use ${TreatedData}/cadDomPesRs_idHh.dta, clear
 
 gen dateUpdate = dateUpdateDom
 replace dateUpdate = dateUpdatePes if dateUpdateDom == .

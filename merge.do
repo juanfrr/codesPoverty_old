@@ -27,6 +27,7 @@ save ${TreatedData}/raisCadRs_hh.dta, replace
 *Random Sample for Cadunico Pessoa e Domicilio
 use ${TreatedData}/cadUnicoDomRs_idHh.dta, clear
 merge 1:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(hhSizePes below6 below15 teens adults dateUpdatePes incomePes codmun) update
+rename _merge mcadDomPes
 gen dateUpdate = dateUpdateDom
 replace dateUpdate = dateUpdatePes if dateUpdateDom == .
 gen period = "07/30/09 to 04/01/11" if dateUpdate>=date("30Jul2009","DMY") & dateUpdate<date("01Apr2011","DMY")
@@ -40,33 +41,23 @@ format date* %tdCCYY.NN.DD
 
 save ${TreatedData}/cadDomPesRs_idHh.dta, replace
 
-capture log close 
-
-/*
-*Samples for bunching estimates
+*Random Sample Including FolhaIncome and CadUnicoIdHh (check date of Updates in Folha)
 use ${TreatedData}/cadDomPesRs_idHh.dta, clear
-bysort incomeDomPc period dependents teen: gen c = _N
-bysort incomeDomPc period dependents teen: gen aux = _n
-keep if c == aux & incomeDomPc <1000
-keep incomeDomPc c period dependents teen
-sort incomeDomPc
-gen aux = 100*(income[_n+1]-income)
-replace aux = 1 if aux == .
-expand aux, gen(dup)
-sort income dup
-replace c = 0 if dup == 1
-gen ybar = _n/100-0.01
-keep c ybar
-gen r1 = (mod(ybar,1) == 0)
-gen r5 = (mod(ybar,5) == 0)
-gen r10 = (mod(ybar,10) == 0)
-gen r25 = (mod(ybar,25) == 0)
-gen r50 = (mod(ybar,50) == 0)
-gen r100 = (mod(ybar,100) == 0)
-save ${TreatedData}/cadUnicoDomRs_07302009_bin.dta, replace
+merge 1:m idHh using ${TreatedData}/folhaIncomeCompressRs_hhMonth.dta, keepusing(dateFolha incomeFolhaPc)
+rename _merge mcadFolInc
+sort dateFolha
+bysort idHh: gen last = (_n==_N)
+gen monthfolhaMdom = int((dateFolha-dateUpdateDom)/30)
+gen monthfolhaMpes = int((dateFolha-dateUpdatePes)/30)
+gen incomefolhaMdom = incomeFolha - incomeDom
+gen incomefolhaMpes = incomeFolha - incomePes
+save ${TreatedData}/cadFolIncRs_idHhMon.dta, replace
 
+*Random Sample Including Benefits and CadUnico idInd (check definition of dependents)
+use ${TreatedData}/cadUnicoPesRs_idInd.dta, clear
+merge 1:m idInd using ${TreatedData}/FolhaBenefitsRs_idIndMonth.dta, keepusing(idInd dateFolha datePayment eligible* status* benefit*)
+keep if dateUpdatePes <= dateFolha
 
-capture log close 
+save ${TreatedData}/cadFolRs_idIndMon.dta, replace
 
-
-
+capture log close
