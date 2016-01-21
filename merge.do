@@ -28,6 +28,9 @@ save ${TreatedData}/raisCadRs_hh.dta, replace
 use ${TreatedData}/cadUnicoDomRs_idHh.dta, clear
 merge 1:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(hhSizePes below6 below15 teens adults dateUpdatePes incomePes codmun) update
 rename _merge mcadDomPes
+gen hhSize = hhSizeDom
+replace hhSize = hhSizePes if hhSize == .
+gen incomePesPc = incomePes/hhSize
 gen dateUpdate = dateUpdateDom
 replace dateUpdate = dateUpdatePes if dateUpdateDom == .
 gen period = "07/30/09 to 04/01/11" if dateUpdate>=date("30Jul2009","DMY") & dateUpdate<date("01Apr2011","DMY")
@@ -40,6 +43,59 @@ replace period = "06/01/14 to 04/18/15" if dateUpdate>=date("1Jun2014","DMY") & 
 format date* %tdCCYY.NN.DD
 
 save ${TreatedData}/cadDomPesRs_idHh.dta, replace
+
+*Creating bunching samples
+forvalues i = 1/2{
+	if `i' == 1{
+		loc perText = "02/19/13 to 06/01/14"
+		loc date = "021913"
+	}
+	else if `i' == 2{
+		loc perText = "06/01/14 to 04/18/15"
+		loc date = "060114"	
+	}
+	forvalues j=0/2{
+		use ${TreatedData}/cadDomPesRs_idHh.dta, clear
+		keep if per == "`perText'" & below15 == `j' & teens == 0
+		bysort incomeDomPc: gen c = _N
+		bysort incomeDomPc: gen aux = _n
+		keep if c == aux & incomeDomPc <1000
+		keep incomeDomPc c
+		sort incomeDomPc
+		gen aux = 100*(income[_n+1]-income)
+		replace aux = 1 if aux == .
+		expand aux, gen(dup)
+		sort income dup
+		replace c = 0 if dup == 1
+		gen ybar = _n/100-0.01
+		keep c ybar
+		sort ybar
+		gen div3p5 = 3.5*(mod(ybar,3.5)==0)
+		gen Ybar3p5 = sum(div3)-1.75
+		replace Ybar3p5 = Ybar3p5-3.5 if div3p5 == 3.5
+		replace Ybar3p5 = 0 if ybar == 0
+		bysort Ybar3p5: gen ordering = _n
+		bysort Ybar3p5: egen c3p5 = total(c)
+		forvalues k = 2/5{
+			gen ybar`k' = ybar^`k'
+		}
+		gen r1 = (mod(ybar,1) == 0)
+		gen r5 = (mod(ybar,5) == 0)
+		gen r10 = (mod(ybar,10) == 0)
+		gen r25 = (mod(ybar,25) == 0)
+		gen r50 = (mod(ybar,50) == 0)
+		gen r100 = (mod(ybar,100) == 0)
+		gen r25_3 = (ybar == 8 | ybar == 16 | ybar == 33 | ybar == 41 | ybar == 58 | ybar == 66 | ybar == 83 | ybar == 91 | ybar == 108 | ybar == 116 | ybar == 133 | ybar == 141 | ybar == 158 | ybar == 166 | ybar == 183 | ybar == 191)
+		gen r50_4 = (ybar == 12 | ybar == 37 | ybar == 62 | ybar == 87 | ybar == 112 | ybar == 137 | ybar == 162 | ybar == 187)
+		if `i' == 1{
+			gen rMinWage = (ybar == 678 | ybar ==  339 | ybar ==  226 | ybar ==  169 | ybar ==  170 | ybar ==  724 | ybar ==  362 | ybar ==  241 | ybar ==  181)
+		}
+		else if `i' == 2{
+			gen rMinWage = (ybar == 724 | ybar ==  362 | ybar ==  241 | ybar ==  181 | ybar ==  788 | ybar ==  394 | ybar ==  262.67 | ybar ==  197)
+		}
+		save ${TreatedData}/cadUnicoDomRs_`date'_`j'_bin.dta, replace
+	}
+}
 
 *Random Sample Including FolhaIncome and CadUnicoIdHh (check date of Updates in Folha)
 use ${TreatedData}/cadDomPesRs_idHh.dta, clear

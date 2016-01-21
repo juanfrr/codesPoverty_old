@@ -1,4 +1,71 @@
-use ${TreatedData}/cadFolRs_idIndMon.dta, clear
+*Check incomeDom and incomePes
+use ${TreatedData}/cadDomPesRs_idHh.dta, clear
+d income*
+count
+count if incomeDomPc !=. & incomePesPc != .
+gen incomeDomMPes = incomeDomPc -incomePesPc
+sum incomeDomMPes, d
+histogram incomeDomMPes if incomeDomMPes>-100 & incomeDomMPes < 100
+count if incomeDomMPes == 0
+count if incomeDomMPes == 50
+count if abs(incomeDomMPes) < 1
+count if abs(incomeDomMPes) < 10
+count if abs(incomeDomMPes) < 50
+count if abs(incomeDomMPes) < 51
+count if abs(incomeDomMPes) < 100
+summdate dateUpdate if abs(incomeDomMPes) < 1
+summdate dateUpdate if abs(incomeDomMPes) >= 1 & abs(incomeDomMPes)< .
+
+count if abs(incomeDomMPes) < 1
+count if abs(incomeDomMPes) >= 1 & abs(incomeDomMPes)< .
+*In general income is coherent for 41.1% of the households
+count if per == "02/19/13 to 06/01/14" & abs(incomeDomMPes) < 1
+count if per == "02/19/13 to 06/01/14" & abs(incomeDomMPes) >= 1 & abs(incomeDomMPes)< .
+*In the second to last period income is coherent for 42.6% of the households
+count if per == "06/01/14 to 04/18/15" & abs(incomeDomMPes) < 1
+count if per == "06/01/14 to 04/18/15" & abs(incomeDomMPes) >= 1 & abs(incomeDomMPes)< .
+*In the last period income is coherent for 42% of the households
+
+tab hhSize if incomeDomMPes == 50
+count if hhSizeDom == . & incomeDomMPes == 50
+
+          1 |      5,413       13.18       13.18
+          2 |     14,716       35.82       48.99
+          3 |      9,544       23.23       72.23
+          4 |      7,604       18.51       90.73
+
+tab hhSize 
+
+browse if incomeDomMPes == 50
+*Check 
+
+
+
+/*use ${TreatedData}/cadUnicoDomRs_021913_0_bin.dta, clear
+browse if r1 == 1
+use ${TreatedData}/cadUnicoDomRs_021913_2_bin.dta, clear
+browse if div3p5 >0 | r1 == 1
+gen div3 = 3*(mod(ybar,3)==0)
+gen Ybar3 = sum(div3)-1.5
+bysort Ybar3: gen ordering = _n
+keep if r25 == 0 & r25_3 == 0 & r10 == 0
+bysort Ybar3: egen c3 = total(c)
+browse ybar div3 Ybar3 c c3 ordering if r1 == 1 
+twoway (connected c3 Ybar3 if ybar<200 & ordering == 1, msize(small)) , ///
+ytitle(Number of Applicants, size(small) margin(small)) xtitle(Reported Income (Reais), size(small)) ///
+title(2 dep. - before, size(med) margin(medium)) plotregion(color(white)) graphregion(color(white)) ///
+legend(off) xlabel( , labsize(small)) ylabel(, labsize(small)) xline(70, lcolor(red)) ///
+xline(77, lpattern(dash)) xline(140, lcolor(red)) xline(154, lpattern(dash))
+
+use ${TreatedData}/cadUnicoDomRs_idHh.dta, clear
+d income*
+count
+count if mod(income, 1) != 0
+count if mod(income, 5) != 0
+count if income == .
+codebook income if mod(income, 1) != 0 & income <200
+
+/*use ${TreatedData}/cadFolRs_idIndMon.dta, clear
 keep if _merge == 3
 sort idHh dateFolha datePayment
 browse idHh idInd dateFolha datePayment ben* if benDifHh >= 1 & benDifHh < .
