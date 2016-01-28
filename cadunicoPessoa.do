@@ -3,26 +3,27 @@ set more off
 capture log close 
 log using "${Logs}/cadunicoPessoa.log", replace
 
-use ${TreatedData}/cadUnicoCompleteRs.dta, clear
-bysort idInd: gen dup = _N
-drop if dup > 1 /*37 obs (<0.01%)*/
-drop dup
-sort idInd
-isid idInd
-save ${TreatedData}/cadUnicoCompleteRs_idInd.dta, replace
+use ${TreatedData}/cadUnicoPesCompleteRs_raw.dta, clear
 
-keep idHh dta_cadastramento_memb dta_atual_memb cpf idInd cd_ibge cod_sexo_pessoa dta_nasc_pessoa cod_parentesco_rf_pessoa cod_deficiencia_memb cod_sabe_ler_escrever_memb ///
+gen aux = length(dta_atual_memb)
+drop aux
+gen dta_atual_memb_s =substr(dta_atual_memb,1,7)
+gen dateUpdatePes = date(dta_atual_memb_s, "YM")
+label var dateUpdatePes "Update Date for the Individual"
+sort idHh idInd dateUpdatePes
+drop if idInd == idInd[_n+1] & idInd !=. 
+save ${TreatedData}/cadUnicoPesCompleteRs.dta, replace
+
+keep idHh dta_cadastramento_memb dta_atual_memb dateUpdatePes cpf idInd cd_ibge cod_sexo_pessoa dta_nasc_pessoa cod_parentesco_rf_pessoa cod_deficiencia_memb cod_sabe_ler_escrever_memb ///
 ind_frequenta_escola_memb cod_curso_frequenta_memb cod_ano_serie_frequenta_memb cod_curso_frequentou_pessoa_memb cod_ano_serie_frequentou_memb ///
 cod_concluiu_frequentou_memb cod_principal_trab_memb val_remuner_emprego_memb val_renda_bruta_12_meses_memb
-foreach d in dta_cadastramento_memb dta_atual_memb dta_nasc_pessoa{
+foreach d in dta_cadastramento_memb dta_nasc_pessoa{
 	gen aux = length(`d')
-	tab aux
 	drop aux
 	gen `d'_s =substr(`d',1,7)
 }
 gen codmun = floor(cd_ibge/10)
-gen dateUpdatePes = date(dta_atual_memb_s, "YM")
-label var dateUpdatePes "Update Date for the Individual"
+
 gen dateRegisterInd = date(dta_cadastramento_memb_s, "YMD")
 label var dateRegisterInd "Register Date for the Individual"
 gen dateBirth = date(dta_nasc_pessoa_s, "YMD")
@@ -83,18 +84,29 @@ label var incomeLast "Income in the last month"
 rename val_renda_bruta_12_meses_memb incomeYear
 label var incomeYear "Income in the last 12 months"
 gen age = floor((date(dta_atual_memb,"YMD")-date(dta_nasc_pessoa,"YMD"))/365)
-bysort idHh: gen hhSizePes = _N
-isid idInd
-sort idInd
-format date* %tdCCYY.NN.DD
-save ${TreatedData}/cadUnicoPesRs_idInd.dta, replace
-
-**Defining heads of the households by age during update
 gen numAdults = (age>17 & age<66)
 gen below6 = (age <=6 & age >=0)
 gen below15 = (age <= 15 & age >= 0)
 gen teens = (age <= 18 & age > 15)
 gen adults = (age > 18)
+gen incomePes = min(incomeLast, incomeYear)
+bysort idHh: gen hhSizePes = _N
+
+save ${TreatedData}/cadUnicoPesRs.dta, replace
+bysort idInd: gen dup = _N
+drop if dup > 1
+drop dup
+bysort idHh: egen date = max(dateUpdatePes)
+
+isid idInd
+sort idInd
+format date* %tdCCYY.NN.DD
+save ${TreatedData}/cadUnicoPesRs_idInd.dta, replace
+
+***Building cadUnicoPesRs_idHh
+use ${TreatedData}/cadUnicoPesRs.dta, clear
+
+**Defining heads of the households by age during update
 *Ordering people by: 65->16 then 66->814 then 15->0
 gen mAge = age
 replace mAge = -age if age >=16 & age <=65
@@ -115,9 +127,7 @@ replace partner = (relative == 2)
 gen educPartner = .
 replace educPartner = schooling if relative == 2
 
-gen incomePes = min(incomeLast, incomeYear)
-
-collapse (mean) dateUpdatePes hhSizePes (firstnm) codmun (sum) incomePes numAdults below6 below15 teens adults partner (first) educHead ageHead genderHead educPartner, by(idHh)	
+collapse (mean) hhSizePes (max) dateUpdatePes (firstnm) codmun (sum) incomePes numAdults below6 below15 teens adults partner (first) educHead ageHead genderHead educPartner, by(idHh)
 gen uf = int(codmun/100000)
 gen educHeadEx = (educHead !=.)
 replace educHead = 0 if educHead == .

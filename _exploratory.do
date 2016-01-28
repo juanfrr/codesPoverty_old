@@ -1,4 +1,107 @@
-*Check incomeDom and incomePes
+use ${TreatedData}/cadUnicoPesCompleteRs_raw.dta, clear
+
+gen aux = length(dta_atual_memb)
+drop aux
+gen dta_atual_memb_s =substr(dta_atual_memb,1,7)
+gen dateUpdatePes = date(dta_atual_memb_s, "YM")
+label var dateUpdatePes "Update Date for the Individual"
+count if dateUpdatePes >= date("Jan2013", "MY")
+
+use ${TreatedData}/folhaBenefit2015RS_idHh.dta, clear
+codebook id if rf_folha == "03/2015"
+codebook id if rf_folha == "03/2015" & vlrtotal > 0 & vlrtotal <.
+
+/*Checking spikes at RAIS
+use ${TreatedData}/raisRs_060114_0_bin.dta, clear
+browse if ybar <=182 & ybar >= 180
+*dep = 0 is at 181.75
+
+use ${TreatedData}/raisRs_060114_1_bin.dta, clear
+browse if ybar <=200 & ybar >= 150 & r1 == 1
+browse if ybar <=184 & ybar >= 182
+*dep = 1 is at 182.44
+
+use ${TreatedData}/raisRs_060114_2_bin.dta, clear
+browse if ybar <=200 & ybar >= 150 & r1 == 1
+browse if ybar <=189 & ybar >= 187
+*dep = 2 is at 187.87 and 187.33
+
+/*Checking if there is an individual in two hhs
+use ${TreatedData}/cadUnicoCompleteRs.dta, clear
+bysort idInd: gen dup = _N 
+tab dup
+unique idHh if dup == 2
+browse idHh idInd dta_atua dup cpf if dup > 1
+*Verifying individuals from same hh that updated in different dates
+use ${TreatedData}/cadUnicoPesRs_idInd.dta, clear
+
+bysort idHh dateUpdatePes: gen nIndDate = _N
+bysort idHh : gen nInd = _N
+count if nInd == nIndDate
+count if nInd != nIndDate
+
+/*Checking incomeRais == 0
+use ${TreatedData}/raisCadRs_idHh.dta, clear
+keep if date >= date("1Jun2014","DMY") & below15 == 0 & teens == 0
+count 
+count if incomeRaisPc == .
+count if incomeRais == .
+
+bysort incomeRaisPc: gen c = _N
+bysort incomeRaisPc: gen aux = _n
+keep if c == aux & incomeRaisPc <1000
+keep incomeRaisPc c
+sort incomeRaisPc
+gen aux = 100*(income[_n+1]-income)
+replace aux = 1 if aux == .
+expand aux, gen(dup)
+sort income dup
+replace c = 0 if dup == 1
+gen ybar = _n/100-0.01
+keep c ybar
+sort ybar
+
+
+use ${TreatedData}/raisRs_060114_0_bin.dta, clear
+browse
+tab c if ybar < 1000
+tab 
+/*Checking obs with non integer incomeDomPc
+*Conclusion: Until the beginning of 2011 the non-round numbers were more frequent.
+
+
+use ${TreatedData}/cadUnicoDomRs_idHh.dta, clear
+count
+count if mod(incomeDomPc, 1) != 0
+count if incomeDomPc == .
+browse if mod(incomeDomPc, 1) != 0
+summdate dateUpdate
+summdate dateUpdate if mod(incomeDomPc, 1) != 0
+
+count if mod(incomeDomPc, 1) != 0
+count
+count if mod(incomeDomPc, 1) != 0 & dateUpdate>=date("01Jan2009","DMY") & dateUpdate<date("01Jan2010","DMY")
+count if dateUpdate>=date("01Jan2009","DMY") & dateUpdate<date("01Jan2010","DMY")
+count if mod(incomeDomPc, 1) != 0 & dateUpdate>=date("01Jan2010","DMY") & dateUpdate<date("01Jan2011","DMY")
+count if dateUpdate>=date("01Jan2010","DMY") & dateUpdate<date("01Jan2011","DMY")
+count if mod(incomeDomPc, 1) != 0 & dateUpdate>=date("01Jan2011","DMY") & dateUpdate<date("01Jan2012","DMY")
+count if dateUpdate>=date("01Jan2011","DMY") & dateUpdate<date("01Jan2012","DMY")
+
+count if mod(incomeDomPc, 1) != 0 & dateUpdate>=date("01Jan2011","DMY") & dateUpdate<date("01Mar2011","DMY")
+count if dateUpdate>=date("01Jan2011","DMY") & dateUpdate<date("01Mar2011","DMY")
+count if mod(incomeDomPc, 1) != 0 & dateUpdate>=date("01Mar2011","DMY") & dateUpdate<date("01May2011","DMY")
+count if dateUpdate>=date("01Mar2011","DMY") & dateUpdate<date("01May2011","DMY")
+
+count if mod(incomeDomPc, 1) != 0 & dateUpdate>=date("01Jan2012","DMY") & dateUpdate<date("01Jan2013","DMY")
+count if dateUpdate>=date("01Jan2012","DMY") & dateUpdate<date("01Jan2013","DMY")
+count if mod(incomeDomPc, 1) != 0 & dateUpdate>=date("01Jan2013","DMY") & dateUpdate<date("01Jan2014","DMY")
+count if dateUpdate>=date("01Jan2013","DMY") & dateUpdate<date("01Jan2014","DMY")
+count if mod(incomeDomPc, 1) != 0 & dateUpdate>=date("01Jan2014","DMY") & dateUpdate<date("01Jan2015","DMY")
+count if dateUpdate>=date("01Jan2014","DMY") & dateUpdate<date("01Jan2015","DMY")
+count if mod(incomeDomPc, 1) != 0 & dateUpdate>=date("01Jan2015","DMY") & dateUpdate<date("01Jan2016","DMY")
+count if dateUpdate>=date("01Jan2015","DMY") & dateUpdate<date("01Jan2016","DMY")
+
+/*Check incomeDom and incomePes
 use ${TreatedData}/cadDomPesRs_idHh.dta, clear
 d income*
 count

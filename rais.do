@@ -39,7 +39,7 @@ forvalues i=2012(1)2014{
 	replace dates = year + "-0" + months if month <10
 	gen date = date(dates,"YM")
 	drop year month* dates
-	save ${TreatedData}/raisRs`i'_indMonth.dta, replace 
+	save ${TreatedData}/raisRs`i'_indMonth.dta, replace  
 	
 	collapse (sum) incomeRais (firstnm) codmunRais,  by(idHh date)		
 	label var incomeRais "Household Income"
@@ -52,14 +52,22 @@ forvalues i=2012(1)2013{
 	append using ${TreatedData}/raisRs`i'_hhMonth.dta
 }
 sort idHh date
+format date %tdCCYY.NN.DD
 save ${TreatedData}/raisRs_hhMonth.dta, replace
 
 use ${TreatedData}/raisRs2012_indMonth.dta, clear
 forvalues i=2013(1)2014{
 	append using ${TreatedData}/raisRs`i'_indMonth.dta
 }
-sort idHh date
+format date dateAdm1 %tdCCYY.NN.DD
+sort idHh cpf date
 save ${TreatedData}/raisRs_indMonth.dta, replace
 
+collapse (sum) incomeRais (firstnm) codmunRais,  by(cpf date)
+label var incomeRais "Individual Income"
+isid cpf date
+sort cpf date
+save ${TreatedData}/raisRs_cpfMonth.dta, replace
+	
 capture log close
 

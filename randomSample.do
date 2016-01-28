@@ -27,7 +27,7 @@ sort idHh
 merge m:1 idHh using ${TreatedData}/randomSample_idHh.dta 
 drop if _m == 1 /*Cannot keep only rs because they will have idInd == . being dropped as duplicates*/
 rename _m mCadPesRs
-save ${TreatedData}/cadUnicoCompleteRs.dta, replace
+save ${TreatedData}/cadUnicoPesCompleteRs_raw.dta, replace
 preserve
 bysort idInd: gen dup = _N
 drop if dup > 1 

@@ -3,6 +3,28 @@ set more off
 capture log close 
 log using "${Logs}/merge.log", replace
 
+*Random Sample for Rais bunching
+use ${TreatedData}/cadUnicoPesRs_idInd.dta, clear
+keep if date >= date("01/01/2012","MDY") & date < date("01/01/2015","MDY")
+merge m:1 cpf date using ${TreatedData}/raisRs_cpfMonth.dta
+drop if _m == 2
+gen formal = (_m == 3) 
+rename _m mPesRais
+gen adult = (age>17 & age<66 & gender == 1 | age>17 & age<56 & gender == 2)
+bysort idHh (incomeRais): gen allmissing = mi(incomeRais[1])
+collapse (sum) formal adult incomeRais below15 teens incomePes (mean) hhSize codmunRais (min) allmissing, by (idHh date) 
+replace incomeRais = . if allmissing
+gen formal1 = (formal > 0 & formal <.)
+gen formalAll = (formal == adult & formal <.)
+isid idHh
+merge 1:1 idHh using  ${TreatedData}/cadUnicoDomRs_idHh.dta, keepusing(hhSizeDom dateUpdateDom incomeDomPc codmun)
+rename _m mPesRaisDom
+gen hhSize = hhSizeDom
+replace hhSize = hhSizePes if hhSize == .
+gen incomePesPc = incomePes/hhSize
+gen incomeRaisPc = incomeRais/hhSize
+save ${TreatedData}/raisCadRs_idHh.dta, replace
+
 *Random Sample for Rais histograms
 use ${TreatedData}/raisRs_hhMonth.dta, clear
 sort idHh
@@ -24,7 +46,7 @@ isid idHh date
 sort idHh date
 save ${TreatedData}/raisCadRs_hh.dta, replace
 
-*Random Sample for Cadunico Pessoa e Domicilio
+*Random Sample for Cadunico Pessoa e Domicilio (for Household Composition and check income)
 use ${TreatedData}/cadUnicoDomRs_idHh.dta, clear
 merge 1:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(hhSizePes below6 below15 teens adults dateUpdatePes incomePes codmun) update
 rename _merge mcadDomPes
@@ -43,59 +65,6 @@ replace period = "06/01/14 to 04/18/15" if dateUpdate>=date("1Jun2014","DMY") & 
 format date* %tdCCYY.NN.DD
 
 save ${TreatedData}/cadDomPesRs_idHh.dta, replace
-
-*Creating bunching samples
-forvalues i = 1/2{
-	if `i' == 1{
-		loc perText = "02/19/13 to 06/01/14"
-		loc date = "021913"
-	}
-	else if `i' == 2{
-		loc perText = "06/01/14 to 04/18/15"
-		loc date = "060114"	
-	}
-	forvalues j=0/2{
-		use ${TreatedData}/cadDomPesRs_idHh.dta, clear
-		keep if per == "`perText'" & below15 == `j' & teens == 0
-		bysort incomeDomPc: gen c = _N
-		bysort incomeDomPc: gen aux = _n
-		keep if c == aux & incomeDomPc <1000
-		keep incomeDomPc c
-		sort incomeDomPc
-		gen aux = 100*(income[_n+1]-income)
-		replace aux = 1 if aux == .
-		expand aux, gen(dup)
-		sort income dup
-		replace c = 0 if dup == 1
-		gen ybar = _n/100-0.01
-		keep c ybar
-		sort ybar
-		gen div3p5 = 3.5*(mod(ybar,3.5)==0)
-		gen Ybar3p5 = sum(div3)-1.75
-		replace Ybar3p5 = Ybar3p5-3.5 if div3p5 == 3.5
-		replace Ybar3p5 = 0 if ybar == 0
-		bysort Ybar3p5: gen ordering = _n
-		bysort Ybar3p5: egen c3p5 = total(c)
-		forvalues k = 2/5{
-			gen ybar`k' = ybar^`k'
-		}
-		gen r1 = (mod(ybar,1) == 0)
-		gen r5 = (mod(ybar,5) == 0)
-		gen r10 = (mod(ybar,10) == 0)
-		gen r25 = (mod(ybar,25) == 0)
-		gen r50 = (mod(ybar,50) == 0)
-		gen r100 = (mod(ybar,100) == 0)
-		gen r25_3 = (ybar == 8 | ybar == 16 | ybar == 33 | ybar == 41 | ybar == 58 | ybar == 66 | ybar == 83 | ybar == 91 | ybar == 108 | ybar == 116 | ybar == 133 | ybar == 141 | ybar == 158 | ybar == 166 | ybar == 183 | ybar == 191)
-		gen r50_4 = (ybar == 12 | ybar == 37 | ybar == 62 | ybar == 87 | ybar == 112 | ybar == 137 | ybar == 162 | ybar == 187)
-		if `i' == 1{
-			gen rMinWage = (ybar == 678 | ybar ==  339 | ybar ==  226 | ybar ==  169 | ybar ==  170 | ybar ==  724 | ybar ==  362 | ybar ==  241 | ybar ==  181)
-		}
-		else if `i' == 2{
-			gen rMinWage = (ybar == 724 | ybar ==  362 | ybar ==  241 | ybar ==  181 | ybar ==  788 | ybar ==  394 | ybar ==  262.67 | ybar ==  197)
-		}
-		save ${TreatedData}/cadUnicoDomRs_`date'_`j'_bin.dta, replace
-	}
-}
 
 *Random Sample Including FolhaIncome and CadUnicoIdHh (check date of Updates in Folha)
 use ${TreatedData}/cadDomPesRs_idHh.dta, clear

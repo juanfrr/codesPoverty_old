@@ -16,6 +16,7 @@ global Presentation "${Poverty}/Presentation/today"
 global Codes "${Poverty}/codesPoverty"
 global Logs "${Poverty}/Logs"
 global Graphs "${Poverty}/Graphs"
+global Bunching "${Graphs}/Bunching"
 global Tables "${Poverty}/Tables"
 
 global CadastroUnico "${RawData}/CadastroUnico/Bases_abril_2015"
@@ -48,7 +49,8 @@ run "${Codes}/merge.do"
 run "${Codes}/createVariables.do"
 
 *** ANALYZING DATA ***
-  
+
+run "${Codes}/cadRais.do"  
 run "${Codes}/histograms.do"
 run "${Codes}/maps.do"
 run "${Codes}/hhComposition.do"
