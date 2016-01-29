@@ -3,22 +3,24 @@ set more off
 capture log close 
 log using "${Logs}/createVariables.log", replace
 
-*Dataset for rais histograms
-use ${TreatedData}/raisCadRs_hh.dta, clear
+*Datasets to describe selection
+use ${TreatedData}/raisCadRs_idHh.dta, clear
 gen uf = floor(codmun/10000)
 gen ufRais = floor(codmunRais/10000)
+gen formal1 = (formal > 0 & formal <.)
+gen formalAll = (formal == workingAge & formal <.)
 gen hhSize = hhSizeDom
-replace hhSize = hhSizePes if hhSizeDom == . | hhSizeDom == 0
-count if hhSizeDom == . & incomeRais !=.
-gen incomeRaisPc = incomeRais/hhSize
+replace hhSize = hhSizePes if hhSize == . | hhSizeDom == 0
 gen incomePesPc = incomePes/hhSize
+gen incomeRaisPc = incomeRais/hhSize
 gen incomeBfPc = incomeDomPc
-replace incomeBfPc = incomePesPc if date != dateUpdateDom
+replace incomeBfPc = incomePesPc if incomeBfPc == .
 gen evasionPc = incomeRaisPc-incomeBfPc
-save ${TreatedData}/raisCadCompleteRs_hh.dta, replace
+save ${TreatedData}/raisCadCompleteRs_idHh.dta, replace
 
 *Dataset for maps with average evasion
 collapse evasionPc, by(codmun)
+drop if codmun == .
 isid codmun
 sort codmun
 save ${TreatedData}/evasionPc_mun.dta, replace
@@ -35,10 +37,9 @@ save ${TreatedData}/applicants_mun.dta, replace
 
 ***Creating bunching samples
 *RAIS, Cadunico Pessoa and domicilio
-
 foreach level in Dom Pes Rais{
 	forvalues j=0/2{
-		use ${TreatedData}/raisCadRs_idHh.dta, clear
+		use ${TreatedData}/raisCadCompleteRs_idHh.dta, clear
 		keep if date >= date("1Jun2014","DMY") & below15 == `j' & teens == 0
 		bysort income`level'Pc: gen c = _N
 		bysort income`level'Pc: gen aux = _n
@@ -91,7 +92,7 @@ foreach level in Dom Pes Rais{
 *Cadunico Domicilio for formal1 and formalAll
 foreach sel in All 1{
 	forvalues j=0/2{
-		use ${TreatedData}/raisCadRs_idHh.dta, clear
+		use ${TreatedData}/raisCadCompleteRs_idHh.dta, clear
 		keep if date >= date("1Jun2014","DMY") & below15 == `j' & teens == 0 & formal`sel' == 1
 		bysort incomeDomPc: gen c = _N
 		bysort incomeDomPc: gen aux = _n

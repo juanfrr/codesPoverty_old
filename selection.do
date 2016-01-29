@@ -6,36 +6,26 @@ log using "${Logs}/selection.log", replace
 /*Goal: Tab merge of Cadunico and Rais
 Conclusions: */
 
-use ${TreatedData}/cadUnicoPesRs_idInd.dta, clear
-rename dateUpdatePes date
+use ${TreatedData}/cadRaisRs_cpfMonth.dta, clear
 keep if date >= date("01/01/2012","MDY") & date < date("01/01/2015","MDY")
-merge m:1 cpf date using ${TreatedData}/raisRs_cpfMonth.dta
-
 file open Table using "${Text}/tab_selection.tex", write replace
 
-count if _m == 1
+count if formal == 0
 loc c11 = r(N)
-count if _m == 3
+count if formal == 1
 loc c12 = r(N)
 
-gen formal = (_m == 3) 
-gen adult = (age>17 & age<66 & gender == 1 | age>17 & age<56 & gender == 2)
-
-collapse (sum) formal adult, by (idHh date) 
-
-count if formal == 0
+use ${TreatedData}/raisCadCompleteRs_idHh.dta, clear
+keep if dateUpdateDom >= date("01/01/2012","MDY") & dateUpdateDom < date("01/01/2015","MDY")
+count if formal1 == 0
 loc c21 = r(N)
-count if formal > 0
+count if formal1 == 1
 loc c22 = r(N)
-count
-loc total2 = r(N)
 
-count if formal < adult
+count if formalAll == 0
 loc c31 = r(N)
-count if formal >= adult
+count if formalAll == 1
 loc c32 = r(N)
-count
-loc total3 = r(N)
 
 forvalues i = 1/3{
 	loc total`i' = `c`i'1'+`c`i'2'

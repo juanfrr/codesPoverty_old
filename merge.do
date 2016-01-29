@@ -3,50 +3,27 @@ set more off
 capture log close 
 log using "${Logs}/merge.log", replace
 
-*Random Sample for Rais bunching
+*Random Sample to describe selection
 use ${TreatedData}/cadUnicoPesRs_idInd.dta, clear
 keep if date >= date("01/01/2012","MDY") & date < date("01/01/2015","MDY")
 merge m:1 cpf date using ${TreatedData}/raisRs_cpfMonth.dta
-drop if _m == 2
-gen formal = (_m == 3) 
+drop if _m == 2 
+gen formal = (_m == 3)
 rename _m mPesRais
-gen adult = (age>17 & age<66 & gender == 1 | age>17 & age<56 & gender == 2)
+save ${TreatedData}/cadRaisRs_cpfMonth.dta, replace
+
+*Random Sample to describe selection for RAIS, histograms and bunching
 bysort idHh (incomeRais): gen allmissing = mi(incomeRais[1])
-collapse (sum) formal adult incomeRais below15 teens incomePes (mean) hhSize codmunRais (min) allmissing, by (idHh date) 
+collapse (sum) formal workingAge incomeRais below15 teens incomePes (mean) hhSize codmunRais (min) allmissing, by (idHh date) 
 replace incomeRais = . if allmissing
-gen formal1 = (formal > 0 & formal <.)
-gen formalAll = (formal == adult & formal <.)
+drop allmissing
 isid idHh
 merge 1:1 idHh using  ${TreatedData}/cadUnicoDomRs_idHh.dta, keepusing(hhSizeDom dateUpdateDom incomeDomPc codmun)
 rename _m mPesRaisDom
-gen hhSize = hhSizeDom
-replace hhSize = hhSizePes if hhSize == .
-gen incomePesPc = incomePes/hhSize
-gen incomeRaisPc = incomeRais/hhSize
+isid idHh
 save ${TreatedData}/raisCadRs_idHh.dta, replace
 
-*Random Sample for Rais histograms
-use ${TreatedData}/raisRs_hhMonth.dta, clear
-sort idHh
-merge m:1 idHh using ${TreatedData}/cadUnicoDomRs_idHh.dta, keepusing(hhSizeDom dateUpdateDom incomeDomPc codmun)
-/*No obs just in folhaRais because rais is a subset cadUnicoPes*/ 
-rename _m mRaisDom
-merge m:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(hhSizePes dateUpdatePes incomePes codmun) update
-/*No obs just in cadUnicoPes (apparently a subset of cadUnicoDom, but almost the same)*/
-rename _m mRaisDomPes
-save ${TreatedData}/raisCadRs_hhMonth.dta, replace
-keep if (date == dateUpdateDom | date == dateUpdatePes) & date != . 
-unique idHh
-bysort idHh: gen dup = _N
-tab dup
-drop if date == dateUpdatePes & dup == 2
-drop dup
-count
-isid idHh date
-sort idHh date
-save ${TreatedData}/raisCadRs_hh.dta, replace
-
-*Random Sample for Cadunico Pessoa e Domicilio (for Household Composition and check income)
+*Random Sample for Cadunico Pessoa e Domicilio (for Household Composition and Check income)
 use ${TreatedData}/cadUnicoDomRs_idHh.dta, clear
 merge 1:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(hhSizePes below6 below15 teens adults dateUpdatePes incomePes codmun) update
 rename _merge mcadDomPes

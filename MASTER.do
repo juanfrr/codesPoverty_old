@@ -12,7 +12,7 @@ global TreatedData "${root}/TreatedData"
 global Poverty "${root}/Copy/Projects/Poverty"
 
 global Text "${Poverty}/textPoverty"
-global Presentation "${Poverty}/Presentation/today"
+global Presentation "${Poverty}/presentationPoverty"
 global Codes "${Poverty}/codesPoverty"
 global Logs "${Poverty}/Logs"
 global Graphs "${Poverty}/Graphs"
@@ -50,7 +50,7 @@ run "${Codes}/createVariables.do"
 
 *** ANALYZING DATA ***
 
-run "${Codes}/cadRais.do"  
+*run "${Codes}/cadRais.do"  
 run "${Codes}/histograms.do"
 run "${Codes}/maps.do"
 run "${Codes}/hhComposition.do"

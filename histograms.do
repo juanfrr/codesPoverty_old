@@ -40,11 +40,8 @@ graph save ${Graphs}/cadDomRs_secondAfter, replace
 graph combine ${Graphs}/cadDomRs_firstAfter.gph ${Graphs}/cadDomRs_secondAfter.gph, col(2)
 graph export ${Presentation}/fig_cadDomRs_After.pdf, replace
 
-*graph combine ${Graphs}/cadDomRs_firstBefore.gph ${Graphs}/cadDomRs_secondBefore.gph ${Graphs}/cadDomRs_firstAfter.gph ${Graphs}/cadDomRs_secondAfter.gph, col(2) 
-*graph export "${Text}/fig_CadDomRs.png", replace
-
 *Rais 
-use ${TreatedData}/raisCadCompleteRs_hh.dta, clear
+use ${TreatedData}/raisCadCompleteRs_idHh.dta, clear
 
 count if date<date("06/01/2014","MDY") & incomeDomPc > 52.5 & incomeDomPc < 98
 local N: display %19.0f r(N)
@@ -80,11 +77,8 @@ graph save ${Graphs}/raisRs_secondAfter, replace
 graph combine ${Graphs}/raisRs_firstAfter.gph ${Graphs}/raisRs_secondAfter.gph, col(2)
 graph export ${Presentation}/fig_raisRs_After.pdf, replace
 
-*graph combine ${Graphs}/raisRs_firstBefore.gph ${Graphs}/raisRs_secondBefore.gph ${Graphs}/raisRs_firstAfter.gph ${Graphs}/raisRs_secondAfter.gph, col(2) 
-*graph export "${Text}/fig_raisRs.png", replace
-
 *Evasion
-use ${TreatedData}/raisCadCompleteRs_hh.dta, clear
+use ${TreatedData}/raisCadCompleteRs_idHh.dta, clear
 
 count
 local T: display %7.0f r(N)
@@ -118,7 +112,7 @@ graph export ${Text}/fig_evasionRs.png, replace
 
 * Relation between third party and reported income
 
-use ${TreatedData}/raisCadCompleteRs_hh.dta, clear
+use ${TreatedData}/raisCadCompleteRs_idHh.dta, clear
 
 preserve
 
@@ -147,23 +141,5 @@ label var incomeBfPc "Reported Income"
 label var incomeRaisPc "3rd Party Reported Income"
 graph twoway scatter incomeRaisPc incomeBfPc
 graph export ${Presentation}/incomeBfRais.pdf, replace
-
-*Theory Lunch
-
-/*use ${TreatedData}/cadUnicoDomRs_idHh.dta, clear
-
-histogram incomeDomPc if dateUpdateDom>date("06/01/2014","MDY") ///
-& incomeDomPc > 119 & incomeDomPc < 168, width(3.5) start(119.001) ///
- ylabel(0(0.01)0.05) xlabel(154) play(${Codes}/theory)
-graph save ${Graphs}/fig_cadDomRs_After, replace
-graph export ${Presentation}/fig_cadDomRs_After.pdf, replace
-
-use ${TreatedData}/raisCadCompleteRs_hh.dta, clear
-
-histogram incomeRaisPc if date>date("06/01/2014","MDY") ///
-& incomeRaisPc > 119 & incomeRaisPc < 168, width(3.5) start(119.001) ///
-ylabel(0(0.01)0.05) xlabel(154) play(${Codes}/theory)
-graph save ${Graphs}/fig_raisRs_After, replace
-graph export ${Presentation}/fig_raisRs_After.pdf, replace*/
 
 capture log close

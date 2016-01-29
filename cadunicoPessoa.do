@@ -89,6 +89,7 @@ gen below6 = (age <=6 & age >=0)
 gen below15 = (age <= 15 & age >= 0)
 gen teens = (age <= 18 & age > 15)
 gen adults = (age > 18)
+gen workingAge = (age>17 & age<66 & gender == 1 | age>17 & age<56 & gender == 2)
 gen incomePes = min(incomeLast, incomeYear)
 bysort idHh: gen hhSizePes = _N
 
