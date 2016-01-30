@@ -6,7 +6,7 @@ log using "${Logs}/hhComposition.log", replace
 *Table for all households
 use ${TreatedData}/cadDomPesRs_idHh.dta, clear
 keep if per == "06/01/14 to 04/18/15"
-drop if teens == . | below15 == . | below6 == . | hhSize == . | teens > 0
+drop if teens == . | below15 == . | below6 == . | hhSize == . | teens > 0 | hhSize < below15
 file open Table using "${Text}/tab_hhComp.tex", write replace
 
 file write Table "\begin{tabular}{crrrr|r}" _n
@@ -20,21 +20,43 @@ forvalues i = 1/6{
 	loc totalp`i' = r(N)
 	forvalues j = 0(1)2{
 		count if hhSize == `i' & below15 == `j'
-		loc c`i'`j' = r(N)
-		local p`i'`j': display %9.1f 100*`c`i'`j''/`total'
+		if `i' >= `j'{
+			loc c`i'`j' = r(N)
+			local p`i'`j': display %9.1f 100*`c`i'`j''/`total'
+		}
+		else{
+			loc c`i'`j' = "-"
+			local p`i'`j' = ""
+		}
 		count if below15 == `j'
 		loc totald`j' = r(N)
 		loc pd`j': display %9.1f 100*`totald`j''/`total'
 	}
-	count if hhSize == `i' & below15 >= 3
-	loc c`i'3 = r(N)
-	local p`i'3: display %9.1f 100*`c`i'3'/`total'
-	local pp`i': display %9.1f 100*`totalp`i''/`total'
+	if `i' >= 3{
+		count if hhSize == `i' & below15 >= 3
+		loc c`i'3 = r(N)
+		local p`i'3: display %9.1f 100*`c`i'3'/`total'
+	}
+	else{
+		loc c`i'3 = "-"
+		local p`i'3 = ""
+	}
+	local pm`i': display %9.1f 100*`totalp`i''/`total'
 	count if below15 >= 3
 	loc totald3 = r(N)
 	loc pd3: display %9.1f 100*`totald3'/`total'
-	file write Table "`i' & `c`i'0' & `c`i'1' & `c`i'2' & `c`i'3' & `totalp`i'' \\" _n
-	file write Table " & (`p`i'0'\%) & (`p`i'1'\%) & (`p`i'2'\%) & (`p`i'3'\%) & (`pp`i''\%)\\" _n
+	if `i' == 1{
+		file write Table "`i' & `c`i'0' & `c`i'1' & `c`i'2' & `c`i'3' & `totalp`i'' \\" _n
+		file write Table " & (`p`i'0'\%) & (`p`i'1'\%) & `p`i'2' & `p`i'3' & (`pm`i''\%)\\" _n
+	}
+	if `i' == 2{
+		file write Table "`i' & `c`i'0' & `c`i'1' & `c`i'2' & `c`i'3' & `totalp`i'' \\" _n
+		file write Table " & (`p`i'0'\%) & (`p`i'1'\%) & (`p`i'2'\%) & `p`i'3' & (`pm`i''\%)\\" _n
+	}
+	if `i' >= 3{
+		file write Table "`i' & `c`i'0' & `c`i'1' & `c`i'2' & `c`i'3' & `totalp`i'' \\" _n
+		file write Table " & (`p`i'0'\%) & (`p`i'1'\%) & (`p`i'2'\%) & (`p`i'3'\%) & (`pm`i''\%)\\" _n
+	}
 }
 count if hhSize > 6
 loc totalp7 = r(N)
@@ -46,12 +68,12 @@ forvalues j = 0(1)2{
 count if hhSize == 7 & below15 >= 3
 loc c73 = r(N)
 local p73: display %9.1f 100*`c73'/`total'
-local pp7: display %9.1f 100*`totalp7'/`total'
+local pm7: display %9.1f 100*`totalp7'/`total'
 count if below15 >= 3
 loc totald3 = r(N)
 loc pd3: display %9.1f 100*`totald3'/`total'
 file write Table "7 & `c70' & `c71' & `c72' & `c73' & `totalp7' \\" _n
-file write Table " & (`p70'\%) & (`p71'\%) & (`p72'\%) & (`p73'\%) & (`pp7'\%)\\" _n
+file write Table " & (`p70'\%) & (`p71'\%) & (`p72'\%) & (`p73'\%) & (`pm7'\%)\\" _n
 	
 file write Table "\midrule" _n
 file write Table "Total & `totald0' & `totald1' & `totald2' & `totald3' & `total' \\" _n

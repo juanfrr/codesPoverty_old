@@ -50,6 +50,7 @@ foreach level in Dom Pes Rais{
 				plotregion(color(white)) graphregion(color(white)) legend(off) xlabel( , labsize(small)) ///
 				ylabel(, labsize(small)) xline(77, lcolor(red)) xline(154, lcolor(red))
 				graph save "${Bunching}/`level'_060114_`p'_`dep'_`bin'.gph", replace
+				
 			}
 		}
 	}
@@ -62,7 +63,9 @@ foreach level in Dom Pes Rais{
 		}
 	}
 }
-
+foreach level in Dom Rais{
+	graph export "${Presentation}/`level'_non_div_bin3p5.pdf", replace
+}
 *CadUnico Domicilio with formal1 and formalAll
 foreach sel in All 1{
 	foreach p in raw res non non_div{

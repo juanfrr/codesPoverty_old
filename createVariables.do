@@ -40,7 +40,7 @@ save ${TreatedData}/applicants_mun.dta, replace
 foreach level in Dom Pes Rais{
 	forvalues j=0/2{
 		use ${TreatedData}/raisCadCompleteRs_idHh.dta, clear
-		keep if date >= date("1Jun2014","DMY") & below15 == `j' & teens == 0
+		keep if date >= date("1Jun2014","DMY") & below15 == `j' & teens == 0 & hhSize == `j'+1
 		bysort income`level'Pc: gen c = _N
 		bysort income`level'Pc: gen aux = _n
 		keep if c == aux & income`level'Pc <1000
@@ -93,7 +93,7 @@ foreach level in Dom Pes Rais{
 foreach sel in All 1{
 	forvalues j=0/2{
 		use ${TreatedData}/raisCadCompleteRs_idHh.dta, clear
-		keep if date >= date("1Jun2014","DMY") & below15 == `j' & teens == 0 & formal`sel' == 1
+		keep if date >= date("1Jun2014","DMY") & below15 == `j' & teens == 0 & hhSize == `j'+1 & formal`sel' == 1
 		bysort incomeDomPc: gen c = _N
 		bysort incomeDomPc: gen aux = _n
 		keep if c == aux & incomeDomPc <1000
