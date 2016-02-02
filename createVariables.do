@@ -40,7 +40,7 @@ save ${TreatedData}/applicants_mun.dta, replace
 foreach level in Dom Pes Rais{
 	forvalues j=0/2{
 		use ${TreatedData}/raisCadCompleteRs_idHh.dta, clear
-		keep if date >= date("1Jun2014","DMY") & below15 == `j' & teens == 0 & hhSize == `j'+1
+		keep if date >= date("1Jun2014","DMY") & below15 == `j' & teens == 0
 		bysort income`level'Pc: gen c = _N
 		bysort income`level'Pc: gen aux = _n
 		keep if c == aux & income`level'Pc <1000
@@ -82,6 +82,7 @@ foreach level in Dom Pes Rais{
 		gen r50 = (mod(ybar,50) == 0)
 		gen r100 = (mod(ybar,100) == 0)
 		gen r25_3 = (ybar == 8 | ybar == 16 | ybar == 33 | ybar == 41 | ybar == 58 | ybar == 66 | ybar == 83 | ybar == 91 | ybar == 108 | ybar == 116 | ybar == 133 | ybar == 141 | ybar == 158 | ybar == 166 | ybar == 183 | ybar == 191)
+		gen r50_3 = (ybar == 16 | ybar == 33 | ybar == 66 | ybar == 83 | ybar == 91 | ybar == 116 | ybar == 133 | ybar == 166 | ybar == 183)
 		gen r50_4 = (ybar == 12 | ybar == 37 | ybar == 62 | ybar == 87 | ybar == 112 | ybar == 137 | ybar == 162 | ybar == 187)
 		gen rMinWage = (ybar == 724 | ybar ==  362 | ybar ==  241 | ybar ==  181 | ybar ==  788 | ybar ==  394 | ybar ==  262.67 | ybar ==  197)
 		
@@ -93,7 +94,7 @@ foreach level in Dom Pes Rais{
 foreach sel in All 1{
 	forvalues j=0/2{
 		use ${TreatedData}/raisCadCompleteRs_idHh.dta, clear
-		keep if date >= date("1Jun2014","DMY") & below15 == `j' & teens == 0 & hhSize == `j'+1 & formal`sel' == 1
+		keep if date >= date("1Jun2014","DMY") & below15 == `j' & teens == 0 & formal`sel' == 1
 		bysort incomeDomPc: gen c = _N
 		bysort incomeDomPc: gen aux = _n
 		keep if c == aux & incomeDomPc <1000
@@ -135,6 +136,7 @@ foreach sel in All 1{
 		gen r50 = (mod(ybar,50) == 0)
 		gen r100 = (mod(ybar,100) == 0)
 		gen r25_3 = (ybar == 8 | ybar == 16 | ybar == 33 | ybar == 41 | ybar == 58 | ybar == 66 | ybar == 83 | ybar == 91 | ybar == 108 | ybar == 116 | ybar == 133 | ybar == 141 | ybar == 158 | ybar == 166 | ybar == 183 | ybar == 191)
+		gen r50_3 = (ybar == 16 | ybar == 33 | ybar == 66 | ybar == 83 | ybar == 91 | ybar == 116 | ybar == 133 | ybar == 166 | ybar == 183)
 		gen r50_4 = (ybar == 12 | ybar == 37 | ybar == 62 | ybar == 87 | ybar == 112 | ybar == 137 | ybar == 162 | ybar == 187)
 		gen rMinWage = (ybar == 724 | ybar ==  362 | ybar ==  241 | ybar ==  181 | ybar ==  788 | ybar ==  394 | ybar ==  262.67 | ybar ==  197)
 		
