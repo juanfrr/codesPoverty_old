@@ -5,7 +5,8 @@ log using "${Logs}/cadunicoDomicilio.log", replace
 
 use ${TreatedData}/cadUnicoDomCompleteRs_idHh.dta, clear
 
-keep idHh cd_ibge dat_atualizacao_familia dat_cadastramento_fam vlr_renda_media_fam num_cpf_entrevistador_fam qtd_comodos_domic_fam cod_agua_canalizada_fam cod_abaste_agua_domic_fam ///
+keep if cod_est_cadastral_fam == 3
+keep idHh cd_ibge cod_unidade_t dat_atualizacao_familia dat_cadastramento_fam vlr_renda_media_fam num_cpf_entrevistador_fam qtd_comodos_domic_fam cod_agua_canalizada_fam cod_abaste_agua_domic_fam ///
 cod_escoa_sanitario_domic_fam cod_destino_lixo_domic_fam cod_iluminacao_domic_fam cod_calcamento_domic_fam qtd_pessoas_domic_fam qtd_familias_domic_fam
 foreach d in dat_atualizacao_familia dat_cadastramento_fam{
 	gen aux = length(`d')
@@ -18,6 +19,7 @@ label var dateUpdateDom "Update Date for the Household"
 gen dateRegisterHh = date(dat_cadastramento_fam_s, "YM")
 label var dateRegisterHh "Register Date for the Household"
 gen codmun = floor(cd_ibge/10)
+rename cod_unidade_t codUnity
 rename vlr_renda_media_fam incomeDomPc
 label var incomeDomPc "Household per capita Income"
 rename num_cpf_entrevistador_fam cpfInt

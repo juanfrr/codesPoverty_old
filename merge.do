@@ -25,11 +25,8 @@ save ${TreatedData}/raisCadRs_idHh.dta, replace
 
 *Random Sample for Cadunico Pessoa e Domicilio (for Household Composition and Check income)
 use ${TreatedData}/cadUnicoDomRs_idHh.dta, clear
-merge 1:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(hhSizePes below6 below15 teens adults dateUpdatePes incomePes codmun) update
+merge 1:1 idHh using ${TreatedData}/cadUnicoPesRs_idHh.dta, keepusing(hhSizePes below6 below15 teens adults dateUpdatePes incomePesPc codmun) update
 rename _merge mcadDomPes
-gen hhSize = hhSizeDom
-replace hhSize = hhSizePes if hhSize == .
-gen incomePesPc = incomePes/hhSize
 gen dateUpdate = dateUpdateDom
 replace dateUpdate = dateUpdatePes if dateUpdateDom == .
 gen period = "07/30/09 to 04/01/11" if dateUpdate>=date("30Jul2009","DMY") & dateUpdate<date("01Apr2011","DMY")
@@ -42,6 +39,12 @@ replace period = "06/01/14 to 04/18/15" if dateUpdate>=date("1Jun2014","DMY") & 
 format date* %tdCCYY.NN.DD
 
 save ${TreatedData}/cadDomPesRs_idHh.dta, replace
+
+use ${TreatedData}/cadUnicoPesRs_idInd.dta, clear
+merge m:1 idHh using ${TreatedData}/cadUnicoDomRs_idHh.dta
+rename _m mPesDom
+
+save ${TreatedData}/cadDomPesRs_idInd.dta, replace
 
 *Random Sample Including FolhaIncome and CadUnicoIdHh (check date of Updates in Folha)
 use ${TreatedData}/cadDomPesRs_idHh.dta, clear

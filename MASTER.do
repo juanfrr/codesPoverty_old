@@ -19,7 +19,7 @@ global Graphs "${Poverty}/Graphs"
 global Bunching "${Graphs}/Bunching"
 global Tables "${Poverty}/Tables"
 
-global CadastroUnico "${RawData}/CadastroUnico/Bases_abril_2015"
+global CadastroUnico "${RawData}/CadastroUnico"
 global RAIS "${RawData}/RAIS"
 global Condicionalidades "${RawData}/Condicionalidades"
 global Folha "${RawData}/Folha"

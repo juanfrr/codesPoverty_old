@@ -4,8 +4,10 @@ capture log close
 log using "${Logs}/randomSample.log", replace 
 
 *CadunicoDomicilioRs and Random Sample
-insheet using "${CadastroUnico}/TB_DOMICILIO_BRASIL.CSV/TB_DOMICILIO_BRASIL.csv", clear delimiter(";") names
+insheet using "${CadastroUnico}/22082015/BRASIL/TB_DOMICILIO_BRASIL_22082015.csv", clear delimiter(";") names
 rename cod_familiar_fam idHh
+gen dateUpdateDom = date(dat_atualizacao_familia, "YMD")
+keep if dateUpdateDom >= date(,"YMD") & dateUpdate<.
 replace idHh = int(idHh/100)
 set seed 17
 sample 5

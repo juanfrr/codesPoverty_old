@@ -14,9 +14,10 @@ sort idHh idInd dateUpdatePes
 drop if idInd == idInd[_n+1] & idInd !=. 
 save ${TreatedData}/cadUnicoPesCompleteRs.dta, replace
 
+keep if cod_est_cadastral_memb == 3
 keep idHh dta_cadastramento_memb dta_atual_memb dateUpdatePes cpf idInd cd_ibge cod_sexo_pessoa dta_nasc_pessoa cod_parentesco_rf_pessoa cod_deficiencia_memb cod_sabe_ler_escrever_memb ///
 ind_frequenta_escola_memb cod_curso_frequenta_memb cod_ano_serie_frequenta_memb cod_curso_frequentou_pessoa_memb cod_ano_serie_frequentou_memb ///
-cod_concluiu_frequentou_memb cod_principal_trab_memb val_remuner_emprego_memb val_renda_bruta_12_meses_memb
+cod_concluiu_frequentou_memb cod_principal_trab_memb val* 
 foreach d in dta_cadastramento_memb dta_nasc_pessoa{
 	gen aux = length(`d')
 	drop aux
@@ -83,6 +84,8 @@ rename val_remuner_emprego_memb incomeLast
 label var incomeLast "Income in the last month"
 rename val_renda_bruta_12_meses_memb incomeYear
 label var incomeYear "Income in the last 12 months"
+egen incomeOther = rowtotal(val_renda_doacao_memb val_renda_aposent_memb val_renda_seguro_desemp_memb val_renda_pensao_alimen_memb val_outras_rendas_memb)
+label var incomeOther "Income from Other Sources"
 gen age = floor((date(dta_atual_memb,"YMD")-date(dta_nasc_pessoa,"YMD"))/365)
 gen numAdults = (age>17 & age<66)
 gen below6 = (age <=6 & age >=0)
@@ -90,8 +93,11 @@ gen below15 = (age <= 15 & age >= 0)
 gen teens = (age <= 18 & age > 15)
 gen adults = (age > 18)
 gen workingAge = (age>17 & age<66 & gender == 1 | age>17 & age<56 & gender == 2)
-gen incomePes = min(incomeLast, incomeYear)
+gen incomeLabor = min(incomeLast, incomeYear/12)
+egen incomePes = rowtotal(incomeLabor incomeOther)
 bysort idHh: gen hhSizePes = _N
+bysort idHh: egen incomePesPc = total(incomePes)
+replace incomePesPc = incomePesPc/hhSize
 
 save ${TreatedData}/cadUnicoPesRs.dta, replace
 bysort idInd: gen dup = _N
@@ -127,8 +133,12 @@ gen partner = 0
 replace partner = (relative == 2)
 gen educPartner = .
 replace educPartner = schooling if relative == 2
+bysort idHh (incomePes) : gen allmissing = mi(incomePes[1])
 
-collapse (mean) hhSizePes (max) dateUpdatePes (firstnm) codmun (sum) incomePes numAdults below6 below15 teens adults partner (first) educHead ageHead genderHead educPartner, by(idHh)
+collapse (mean) hhSizePes (min) allmissing (max) dateUpdatePes (firstnm) codmun (sum) incomePes numAdults below6 below15 teens adults partner (first) educHead ageHead genderHead educPartner, by(idHh)
+
+replace incomePes = . if allmissing
+gen incomePesPc = incomePes/hhSizePes
 gen uf = int(codmun/100000)
 gen educHeadEx = (educHead !=.)
 replace educHead = 0 if educHead == .
