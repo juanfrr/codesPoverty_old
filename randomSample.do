@@ -3,33 +3,79 @@ set more off
 capture log close 
 log using "${Logs}/randomSample.log", replace 
 
-*CadunicoDomicilioRs and Random Sample
+*CadunicoDomicilioRs201508 and Random Sample
 insheet using "${CadastroUnico}/22082015/BRASIL/TB_DOMICILIO_BRASIL_22082015.csv", clear delimiter(";") names
 rename cod_familiar_fam idHh
 gen dateUpdateDom = date(dat_atualizacao_familia, "YMD")
-keep if dateUpdateDom >= date(,"YMD") & dateUpdate<.
 replace idHh = int(idHh/100)
+keep if dateUpdateDom >= date("2013.08.22","YMD") 
 set seed 17
 sample 5
 isid idHh
 sort idHh
-save ${TreatedData}/cadUnicoDomCompleteRs_idHh.dta, replace
-keep idHh
+save ${TreatedData}/cadUnicoDomComplete201508Rs_idHh.dta, replace
+keep idHh dateUpdateDom
+rename dateUpdateDom dateUpdateRs
 isid idHh
 sort idHh
 save ${TreatedData}/randomSample_idHh.dta, replace
 
-*CadunicoPessoaRs
-insheet using "${CadastroUnico}/TB_PESSOA_BRASIL.csv", clear delimiter(";") names
+*CadunicoDomicilioRs201504
+insheet using "${CadastroUnico}/Bases_abril_2015/TB_DOMICILIO_BRASIL.CSV/TB_DOMICILIO_BRASIL.csv", clear delimiter(";") names
+rename cod_familiar_fam idHh
+replace idHh = int(idHh/100)
+gen dateUpdateDom = date(dat_atualizacao_familia, "YMD")
+merge 1:1 idHh using ${TreatedData}/randomSample_idHh.dta
+keep if _m == 3
+isid idHh
+sort idHh
+save ${TreatedData}/cadUnicoDomComplete201504Rs_idHh.dta, replace
+
+*CadunicoDomicilioRs201412
+insheet using "${CadastroUnico}/13122014/TB_DOMICILIO_BRASIL_122014.csv", clear delimiter(";") names
+rename cod_familiar_fam idHh
+replace idHh = int(idHh/100)
+gen dateUpdateDom = date(dat_atualizacao_familia, "YMD")
+merge 1:1 idHh using ${TreatedData}/randomSample_idHh.dta
+keep if _m == 3
+isid idHh
+sort idHh
+save ${TreatedData}/cadUnicoDomComplete201412Rs_idHh.dta, replace
+
+*CadunicoDomicilioRs201312
+insheet using "${CadastroUnico}/20122013/TB_DOMICILIO_BRASIL_122013.csv", clear delimiter(";") names
+rename cod_familiar_fam idHh
+replace idHh = int(idHh/100)
+gen dateUpdateDom = date(dat_atual_fam, "YMD")
+merge 1:1 idHh using ${TreatedData}/randomSample_idHh.dta
+keep if _m == 3
+isid idHh
+sort idHh
+save ${TreatedData}/cadUnicoDomComplete201312Rs_idHh.dta, replace
+
+*CadunicoDomicilioRs201212
+insheet using "${CadastroUnico}/29122012/TB_DOMICILIO_BRASIL_122012.csv", clear delimiter(";") names
+rename cod_familiar_fam idHh
+replace idHh = int(idHh/100)
+gen dateUpdateDom = date(dat_atual_fam, "YMD")
+merge 1:1 idHh using ${TreatedData}/randomSample_idHh.dta
+keep if _m == 3
+isid idHh
+sort idHh
+save ${TreatedData}/cadUnicoDomComplete201212Rs_idHh.dta, replace
+
+*CadunicoPessoaRs 201508 and RS
+insheet using "${CadastroUnico}/22082015/BRASIL/TB_PESSOA_BRASIL.csv", clear delimiter(";") names
 rename cod_familiar_fam idHh
 replace idHh = int(idHh/100)
 rename num_nis_pessoa_atual idInd
 rename num_cpf_pessoa cpf
 sort idHh
 merge m:1 idHh using ${TreatedData}/randomSample_idHh.dta 
-drop if _m == 1 /*Cannot keep only rs because they will have idInd == . being dropped as duplicates*/
+drop if _m == 1 
 rename _m mCadPesRs
-save ${TreatedData}/cadUnicoPesCompleteRs_raw.dta, replace
+save ${TreatedData}/cadUnicoPesComplete201508Rs.dta, replace
+
 preserve
 bysort idInd: gen dup = _N
 drop if dup > 1 
@@ -38,6 +84,7 @@ keep idHh idInd cpf
 isid idInd
 sort idHh idInd
 save ${TreatedData}/randomSample_idInd.dta, replace
+
 restore
 bysort cpf: gen dup = _N 
 drop if dup > 1 
@@ -45,6 +92,54 @@ drop dup
 isid cpf
 sort cpf 
 save ${TreatedData}/randomSample_cpf.dta, replace
+
+*CadunicoPessoaRs 201504 and RS
+insheet using "${CadastroUnico}/Bases_abril_2015/TB_PESSOA_BRASIL.csv", clear delimiter(";") names
+rename cod_familiar_fam idHh
+replace idHh = int(idHh/100)
+rename num_nis_pessoa_atual idInd
+rename num_cpf_pessoa cpf
+sort idHh
+merge m:1 idHh using ${TreatedData}/randomSample_idHh.dta 
+drop if _m == 1 
+rename _m mCadPesRs
+save ${TreatedData}/cadUnicoPesComplete201504Rs.dta, replace
+
+*CadunicoPessoaRs 201412 and RS
+insheet using "${CadastroUnico}/13122014/TB_PESSOA_BRASIL_122014.csv", clear delimiter(";") names
+rename cod_familiar_fam idHh
+replace idHh = int(idHh/100)
+rename num_nis_pessoa_atual idInd
+rename num_cpf_pessoa cpf
+sort idHh
+merge m:1 idHh using ${TreatedData}/randomSample_idHh.dta 
+drop if _m == 1 
+rename _m mCadPesRs
+save ${TreatedData}/cadUnicoPesComplete201412Rs.dta, replace
+
+*CadunicoPessoaRs 201312 and RS
+insheet using "${CadastroUnico}/20122013/TB_PESSOA_BRASIL_122013.csv", clear delimiter(";") names
+rename cod_familiar_fam idHh
+replace idHh = int(idHh/100)
+rename num_nis_pessoa_atual idInd
+rename num_cpf_pessoa cpf
+sort idHh
+merge m:1 idHh using ${TreatedData}/randomSample_idHh.dta 
+drop if _m == 1 
+rename _m mCadPesRs
+save ${TreatedData}/cadUnicoPesComplete201312Rs.dta, replace
+
+*CadunicoPessoaRs 201212 and RS
+insheet using "${CadastroUnico}/29122012/TB_PESSOA_BRASIL_122012.csv", clear delimiter(";") names
+rename cod_familiar_fam idHh
+replace idHh = int(idHh/100)
+rename num_nis_pessoa_atual idInd
+rename num_cpf_pessoa cpf
+sort idHh
+merge m:1 idHh using ${TreatedData}/randomSample_idHh.dta 
+drop if _m == 1 
+rename _m mCadPesRs
+save ${TreatedData}/cadUnicoPesComplete201212Rs.dta, replace
 
 *Random Sample from FolhaBenefit
 forvalues i=2012(1)2015{
