@@ -4,66 +4,37 @@ capture log close
 log using "${Logs}/cadunicoPesDom.log", replace
 
 /*Goal: Verify whether hhSizeDom == hhSizePes and if incomeDomPc == incomePes/hhSize
-Conclusions: 99% of the households have hhSizeDom greater than hhSizePes-2 and smaller than hhSizePes+5
-			 In general income is coherent for 21.4% (29.1%) of the households
-			 In the second to last period income is coherent for 21.9%% (29.9%) of the households
-			 In the last period income is coherent for 21.8% (29.6%) of the households
-			 p25(incomeDomPc-incomePesPc) = -5 and p75(incomeDomPc-incomePesPc) = 83.33
-			 41,084 observations or 3.2% (42,720 or 3.3%) have incomeDomPc = incomePesPc +50
-			 Values within brackets are allowing for differences of up to 1 real (rounding issues)
-			 Errors do not seem to come from particular dates
-			 households with error = 50 are more likely to have 2 household members*/
+Conclusions: */
 
 			 
 			 
-*Analysis at the individual level
+****Analysis at the individual level
 use ${TreatedData}/cadDomPesRs_idInd.dta, clear
 
-*keep if mDomPes == 3
-gen incomeDomMPes = incomeDomPc -incomePesPc
-
-bysort idHh: egen datePesMax = max(dateUpdatePes)
-format date* %tdCCYY.NN.DD
-
+***Checking dates
 count if dateUpdateDom == datePesMax
 count if dateUpdateDom == dateUpdatePes
 count if dateUpdateDom == dateUpdatePes & dateUpdateDom != datePesMax
 count if dateUpdateDom != dateUpdatePes & dateUpdateDom == datePesMax
 count
 
-/*gen uf = floor(codmun/10000)
-tab uf 
-tab uf if abs(incomeDomMPes) > 1 & mPesDom == 3
-tab uf if mPesDom < 3*/
+***Checking Income (individual level)
 
-*Pampulha Inconsistencies
-edit idHh idInd date* if cd_ibge == 3106200 & codUnity == 25 & dateUpdateDom != dateUpdatePes
-edit if cd_ibge == 3106200 & codUnity == 25 & dateUpdateDom != dateUpdatePes
-
-*Venda Nova Inconsistencies
-edit idHh date* if cd_ibge == 3106200 & codUnity == 26 & dateUpdateDom != dateUpdatePes
-edit if cd_ibge == 3106200 & codUnity == 26 & dateUpdateDom != dateUpdatePes
-
-edit idHh idInd dateUpdatePes dateUpdateDom hhSizePes income* if cd_ibge == 3106200 & codUnity == 26 & abs(incomeDomMPes) > 1 & mPesDom == 3
-edit if cd_ibge == 3106200 & codUnity == 26 & abs(incomeDomMPes) > 1 & mPesDom == 3
-
-*BH inconsistencies with merge
-edit idHh idInd dateUpdatePes dateUpdateDom hhSizePes income* if cd_ibge == 3106200 & mPesDom < 3
-edit if cd_ibge == 3106200 & mPesDom < 3
-
-count if abs(incomeDomMPes) == 1
+*Proportion of consistent income 
 count if abs(incomeDomMPes) < 1 
 loc incomeConsistent = r(N)
 count if incomeDomMPes < .
 loc totalIncome = r(N)
 display `incomeConsistent'/`totalIncome'
 
+*** Remaining problems:
+
+**1) min(incomeLast, incomeYear) when either is missing
+*Remember that min(#,.)=#
+
 *Proportion of right incomes when min(#>0,.) or min(.,#>0)
 count if abs(incomeDomMPes) < 1 & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
 loc incomeConsistent = r(N)
-count if abs(incomeDomMPes) > 1 & incomeDomMPes < . & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
-count if abs(incomeDomMPes) == 1 & incomeDomMPes < . & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
-count if incomeDomMPes == . & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
 count if incomeDomMPes < . & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
 loc totalIncome = r(N)
 display `incomeConsistent'/`totalIncome'
@@ -82,19 +53,6 @@ count if incomeDomMPes < . & (incomeLast == . & incomeYear > 0 & incomeYear < .)
 loc totalIncome = r(N)
 display `incomeConsistent'/`totalIncome'
 
-*
-keep if m == 3
-count if abs(incomeDomMPes) < 1 & (incomeYear == . & incomeLast > 0 & incomeLast < .)
-count if abs(incomeDomMPes) > 1 & incomeDomMPes <. & (incomeYear == . & incomeLast > 0 & incomeLast < .)
-count if incomeDomMPes == . & (incomeYear == . & incomeLast > 0 & incomeLast < .)
-count if incomeDomMPes == . & (incomeLast == . & incomeYear > 0 & incomeYear < .)
-browse idHh idInd dateUpdatePes dateUpdateDom hhSizePes income* if abs(incomeDomMPes) < 1 & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .)) 
-& dateUpdatePes >= date("01-01-2015", "MDY")
-browse idHh idInd dateUpdatePes dateUpdateDom hhSizePes income* if idHh == 5911840
-
-summdate dateUpdateDom if abs(incomeDomMPes) < 1 & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
-summdate dateUpdatePes if abs(incomeDomMPes) < 1 & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
-
 *Proportion of right incomes when min(#,#) or min(.,.) or min(0,x) or min(x,0)
 count if abs(incomeDomMPes) < 1 & ((incomeLast != . & incomeYear != .) | (incomeYear == . & incomeLast == .) | incomeYear == 0 | incomeLast == 0)
 loc incomeConsistent = r(N)
@@ -102,15 +60,89 @@ count if incomeDomMPes < . & ((incomeLast != . & incomeYear != .) | (incomeYear 
 loc totalIncome = r(N)
 display `incomeConsistent'/`totalIncome'
 
+***Getting examples
+
+**For MDS meeting
+
 sort idHh dateUpdatePes
-browse idHh idInd dateUpdatePes dateUpdateDom hhSizePes income* if abs(incomeDomMPes) < 1  & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
-browse idHh idInd dateUpdatePes dateUpdateDom hhSizePes income* if abs(incomeDomMPes) > 1  & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
+preserve
+
+gen cond = (abs(incomeDomMPes) > 1  & abs(incomeDomMPes) < .  & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .)) & dateUpdatePes >= date("01-01-2015", "MDY"))
+bysort idHh: egen hhcond = total(cond)
+keep if hhcond == 1
+export excel using "${Tables}/forMDS/min.xls", sheet("zero_complete") firstrow(variables) replace
+
+keep idHh idInd dateUpdatePes dateUpdateDom hhSizePes income*
+export excel using "${Tables}/forMDS/min.xls", sheet("zero") firstrow(variables)
+
+restore
+preserve
+
+gen cond = (abs(incomeDomMPes) < 1 & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .)) & dateUpdatePes >= date("01-01-2015", "MDY"))
+bysort idHh: egen hhcond = total(cond)
+keep if hhcond == 1
+export excel using "${Tables}/forMDS/min.xls", sheet("number_complete") firstrow(variables)
+
+keep idHh idInd dateUpdatePes dateUpdateDom hhSizePes income* 
+export excel using "${Tables}/forMDS/min.xls", sheet("number") firstrow(variables)
+
+restore
+preserve
 
 summdate dateUpdateDom if abs(incomeDomMPes) < 1  & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
 summdate dateUpdateDom if abs(incomeDomMPes) > 1  & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
 
+summdate dateUpdateDom if abs(incomeDomMPes) < 1 & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
+summdate dateUpdatePes if abs(incomeDomMPes) < 1 & ((incomeLast == . & incomeYear > 0 & incomeYear < .) | (incomeYear == . & incomeLast > 0 & incomeLast < .))
 
-*Analysis at the hh level			 
+**For BH meeting
+
+*Pampulha Inconsistencies
+gen cond = (cd_ibge == 3106200 & codUnity == 25 & dateUpdateDom != dateUpdatePes)
+bysort idHh: egen hhcond = total(cond)
+keep if hhcond == 1
+export excel using "${Tables}/forBH/inconsistencies.xls", sheet("pampulha_date_complete") firstrow(variables) replace
+
+keep idHh idInd date* 
+export excel using "${Tables}/forBH/inconsistencies.xls", sheet("pampulha_date") firstrow(variables)
+
+restore
+preserve
+
+*Venda Nova Inconsistencies
+gen cond = (cd_ibge == 3106200 & codUnity == 26 & dateUpdateDom != dateUpdatePes)
+bysort idHh: egen hhcond = total(cond)
+keep if hhcond == 1
+export excel using "${Tables}/forBH/inconsistencies.xls", sheet("vendanova_date_complete") firstrow(variables)
+
+keep idHh date* 
+export excel using "${Tables}/forBH/inconsistencies.xls", sheet("vendanova_date") firstrow(variables)
+
+restore
+preserve
+
+gen cond = (cd_ibge == 3106200 & codUnity == 26 & abs(incomeDomMPes) > 1 & mPesDom == 3)
+bysort idHh: egen hhcond = total(cond)
+keep if hhcond == 1
+export excel using "${Tables}/forBH/inconsistencies.xls", sheet("vendanova_income_complete") firstrow(variables)
+
+keep idHh idInd dateUpdatePes dateUpdateDom hhSizePes income* 
+export excel using "${Tables}/forBH/inconsistencies.xls", sheet("vendanova_income") firstrow(variables)
+
+restore
+preserve
+
+*BH inconsistencies with merge
+gen cond = (cd_ibge == 3106200 & mPesDom < 3)
+bysort idHh: egen hhcond = total(cond)
+keep if hhcond == 1
+export excel using "${Tables}/forBH/inconsistencies.xls", sheet("bh_merge_complete") firstrow(variables)
+
+keep idHh idInd dateUpdatePes dateUpdateDom hhSizePes income* 
+export excel using "${Tables}/forBH/inconsistencies.xls", sheet("bh_merge") firstrow(variables)
+
+**** Checking income (hh level)
+
 use ${TreatedData}/cadDomPesRs_idHh.dta, clear
 
 count if incomeDomPc == .
@@ -118,7 +150,6 @@ count if incomePesPc == .
 count if incomeDomPc ==. & incomePesPc == .
 count
 count if incomeDomPc !=. & incomePesPc != .
-gen incomeDomMPes = incomeDomPc -incomePesPc
 
 sum incomeDomMPes, d
 sum incomeDomMPes if abs(incomeDomMPes)>1, d
@@ -126,7 +157,6 @@ sum incomeDomMPes if abs(incomeDomMPes)>1 & per == "06/01/14 to 04/18/15", d
 
 count if abs(incomeDomMPes) < 1
 loc incomeConsistent = r(N)
-count if incomeDomMPes == 0
 count if incomeDomMPes < .
 loc totalIncome = r(N)
 display `incomeConsistent'/`totalIncome'

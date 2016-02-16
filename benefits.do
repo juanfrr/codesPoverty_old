@@ -32,4 +32,21 @@ bysort idHh dateFolha datePayment: egen benTotDifHh =total(benTotDifInd)
 tab benTotDifInd
 tab benTotDifHh
 
+*Proportion of individuals getting benefits0to6 when they should not
+count if benefit0to6 == 35 & age > 7 & ageFolha > 7
+loc benefitIncons = r(N)
+count if benefit0to6 == 35
+loc totalBenefit = r(N)
+display `benefitIncons'/`totalBenefit'
+
+*Getting examples
+preserve
+
+keep if benefit0to6 == 35 & age > 7 & ageFolha > 7 
+export excel using "${Tables}/forMDS/benefits.xls", sheet("benefit0to6_complete") firstrow(variables) replace
+
+keep idHh idInd dta_atual_memb dta_nasc_pessoa age* benefit0to6
+export excel using "${Tables}/forMDS/benefits.xls", sheet("benefit0to6") firstrow(variables)
+
+restore
 capture log close 

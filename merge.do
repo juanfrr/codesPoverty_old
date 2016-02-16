@@ -37,12 +37,14 @@ replace period = "11/30/12 to 02/19/13" if dateUpdate>=date("30Nov2012","DMY") &
 replace period = "02/19/13 to 06/01/14" if dateUpdate>=date("19Feb2013","DMY") & dateUpdate<date("1Jun2014","DMY")
 replace period = "06/01/14 to 04/18/15" if dateUpdate>=date("1Jun2014","DMY") & dateUpdate<date("18Apr2015","DMY")
 format date* %tdCCYY.NN.DD
+gen incomeDomMPes = incomeDomPc -incomePesPc
 
 save ${TreatedData}/cadDomPesRs_idHh.dta, replace
 
 use ${TreatedData}/cadUnicoPesRs_idInd.dta, clear
 merge m:1 idHh using ${TreatedData}/cadUnicoDomRs_idHh.dta
 rename _m mPesDom
+gen incomeDomMPes = incomeDomPc -incomePesPc
 
 save ${TreatedData}/cadDomPesRs_idInd.dta, replace
 
@@ -54,7 +56,7 @@ sort dateFolha
 bysort idHh: gen last = (_n==_N)
 gen monthfolhaMdom = int((dateFolha-dateUpdateDom)/30)
 gen monthfolhaMpes = int((dateFolha-dateUpdatePes)/30)
-gen incomefolhaMdom = incomeFolha - incomeDom
+gen incomefolhaMdom = incomeFolha - incomeDomPc
 gen incomefolhaMpes = incomeFolha - incomePes
 save ${TreatedData}/cadFolIncRs_idHhMon.dta, replace
 
@@ -62,7 +64,7 @@ save ${TreatedData}/cadFolIncRs_idHhMon.dta, replace
 use ${TreatedData}/cadUnicoPesRs_idInd.dta, clear
 merge 1:m idInd using ${TreatedData}/FolhaBenefitsRs_idIndMonth.dta, keepusing(idInd dateFolha datePayment eligible* status* benefit*)
 keep if dateUpdatePes <= dateFolha
-
+gen ageFolha = floor((dateFolha-date(dta_nasc_pessoa,"YMD"))/365)
 save ${TreatedData}/cadFolRs_idIndMon.dta, replace
 
 capture log close

@@ -3,32 +3,29 @@ set more off
 capture log close 
 log using "${Logs}/cadunicoPessoa.log", replace
 
-use ${TreatedData}/cadUnicoPesCompleteRs_raw.dta, clear
-
-gen aux = length(dta_atual_memb)
-drop aux
-gen dta_atual_memb_s =substr(dta_atual_memb,1,7)
-gen dateUpdatePes = date(dta_atual_memb_s, "YM")
-label var dateUpdatePes "Update Date for the Individual"
-bysort idHh: egen datePesMax = max(dateUpdatePes)
-sort idHh idInd dateUpdatePes
-drop if idInd == idInd[_n+1] & idInd !=. 
-save ${TreatedData}/cadUnicoPesCompleteRs.dta, replace
+use ${TreatedData}/cadUnicoPesCompleteRs.dta, clear 
 
 keep if cod_est_cadastral_memb == 3
-keep idHh dta_cadastramento_memb dta_atual_memb dateUpdatePes datePesMax cpf idInd cd_ibge cod_sexo_pessoa dta_nasc_pessoa cod_parentesco_rf_pessoa cod_deficiencia_memb cod_sabe_ler_escrever_memb ///
+keep idHh dta_cadastramento_memb dta_atual_memb cpf idInd cd_ibge cod_sexo_pessoa dta_nasc_pessoa cod_parentesco_rf_pessoa cod_deficiencia_memb cod_sabe_ler_escrever_memb ///
 ind_frequenta_escola_memb cod_curso_frequenta_memb cod_ano_serie_frequenta_memb cod_curso_frequentou_pessoa_memb cod_ano_serie_frequentou_memb ///
 cod_concluiu_frequentou_memb cod_principal_trab_memb val* 
-foreach d in dta_cadastramento_memb dta_nasc_pessoa{
+foreach d in dta_atual_memb dta_cadastramento_memb dta_nasc_pessoa{
 	gen aux = length(`d')
 	drop aux
 	gen `d'_s =substr(`d',1,7)
 }
+gen dateUpdatePes = date(dta_atual_memb_s, "YM")
+label var dateUpdatePes "Month Update for the Individual"
+gen dateCompletePes = date(dta_atual_memb, "YMD")
+label var dateUpdatePes "Day Update for the Individual"
+bysort idHh: egen datePesMax = max(dateUpdatePes)
+/* Note that there are duplicated individuals in this dataset:
+sort idHh idInd dateUpdatePes
+drop if idInd == idInd[_n+1] & idInd !=. */
 gen codmun = floor(cd_ibge/10)
-
-gen dateRegisterInd = date(dta_cadastramento_memb, "YMD")
+gen dateRegisterInd = date(dta_cadastramento_memb_s, "YMD")
 label var dateRegisterInd "Register Date for the Individual"
-gen dateBirth = date(dta_nasc_pessoa, "YMD")
+gen dateBirth = date(dta_nasc_pessoa_s, "YMD")
 label var dateBirth "Birth Date"
 rename cod_deficiencia_memb disable
 label var disable "1-Yes;2-No"
